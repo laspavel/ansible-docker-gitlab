@@ -1,0 +1,30 @@
+version: '3'
+services:
+  web:
+    image: 'gitlab/gitlab-ee:latest'
+    restart: always
+    hostname: '{{ docker_gitlab_host }}'
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'https://{{ docker_gitlab_host }}'
+        # Add any other gitlab.rb configuration (https://gitlab.com/gitlab-org/omnibus-gitlab/blob/master/files/gitlab-config-template/gitlab.rb.template)
+        gitlab_rails['time_zone']='{{ timezone }}'
+        gitlab_rails['gitlab_default_can_create_group'] = true
+        gitlab_rails['gitlab_username_changing_enabled'] = true
+        gitlab_rails['lfs_enabled'] = true
+        gitlab_rails['initial_root_password'] = "{{ docker_gitlab_startpass }}"
+        nginx['ssl_client_certificate'] = "/etc/gitlab/ssl/ca.crt"
+        nginx['ssl_certificate'] = "/etc/gitlab/ssl/{{ docker_gitlab_host }}.crt"
+        nginx['ssl_certificate_key'] = "/etc/gitlab/ssl/{{ docker_gitlab_host }}.key"
+        nginx['ssl_verify_client'] = "off"
+    ports:
+      - '80:80'
+      - '443:443'
+      - '{{ docker_gitlab_port_ssh }}:22'
+    volumes:
+      - ./{{ docker_gitlab_host }}.crt:/etc/gitlab/ssl/{{ docker_gitlab_host }}.crt
+      - ./{{ docker_gitlab_host }}.key:/etc/gitlab/ssl/{{ docker_gitlab_host }}.key
+      - './data/config:/etc/gitlab'
+      - './data/logs:/var/log/gitlab'
+      - './data/opt:/var/opt/gitlab'
+

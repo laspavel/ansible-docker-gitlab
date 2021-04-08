@@ -1,0 +1,45 @@
+---
+- name: Open service https
+  firewalld:
+    service: https
+    permanent: yes
+    immediate: yes
+    state: enabled
+
+- name: Open service https
+  firewalld:
+    service: http
+    permanent: yes
+    immediate: yes
+    state: enabled
+
+- name: Open SSH port
+  firewalld:
+    port: "{{ docker_gitlab_port_ssh }}/tcp"
+    permanent: yes
+    immediate: yes
+    state: enabled
+
+- name: Copy gitlab server_files
+  copy:
+    src: "gitlab/"
+    dest: "/home/{{ docker_gitlab_user }}/gitlab"
+    mode: "0755"
+    owner: "{{ docker_gitlab_user }}"
+    group: "{{ docker_gitlab_user }}"
+
+- name: Copy docker-compose.yml
+  template:
+    src: 'docker-compose.yml.j2'
+    dest: '/home/{{ docker_gitlab_user }}/gitlab/docker-compose.yml'
+    owner: "{{ docker_gitlab_user }}"
+    group: "{{ docker_gitlab_user }}"
+    mode: '0755'
+  ignore_errors: true
+
+- name: Start gitlab container
+  command: "{{ docker_compose_path }} -f /home/{{ docker_gitlab_user }}/gitlab/docker-compose.yml up -d"
+  become: yes
+  become_user: "{{ docker_gitlab_user }}"
+  ignore_errors: true
+
